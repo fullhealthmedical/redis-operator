@@ -1,47 +1,19 @@
+---
 apiVersion: k8s.amaiz.com/v1alpha1
 kind: Redis
 metadata:
+  # the .metadata.labels will be added to all generated resources along with the
+  # redis=example label
   labels:
     app.kubernetes.io/instance: example
     app.kubernetes.io/name: redis
+  # the name of the Redis resource will be used as a label for all generated resources,
+  # and as the infix or suffix for them.
   name: example
-  namespace: redis
 spec:
-  # affinity, annotations, securityContext, nodeSelector tolerations and priorityClassName (all optional)
-  # are added to the resulting StatefulSet's PodTemplate.
-  # More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#podspec-v1-core
-  affinity:
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - podAffinityTerm:
-            labelSelector:
-              matchLabels:
-                app.kubernetes.io/instance: example
-                app.kubernetes.io/name: redis
-            topologyKey: kubernetes.io/hostname
-          weight: 100
+  # required field. Minimum value is 3
+  replicas: 3
 
-  # dataVolumeClaimTemplate allows to define a persistent volume template for Redis. (optional)
-  # If omitted, emptyDir will be used.
-  # More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#persistentvolumeclaim-v1-core
-  #  dataVolumeClaimTemplate:
-  #    metadata:
-  #      name: redis-data
-  #    spec:
-  #      storageClassName: standard
-  #      accessModes:
-  #      - ReadWriteOnce
-  #      resources:
-  #        requests:
-  #          storage: 1Gi
-
-  # Redis container definition (required)
-  # image, resources and securityContext are the same as found in v1.Container.
-  # More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#container-v1-core
-
-  annotations:
-    prometheus.io/port: '9121'
-    prometheus.io/scrape: 'true'
   # config is a set of key-value pairs needed for configuring Redis instances. (optional)
   # keys and values should be string values
   # More info: https://redis.io/topics/config
@@ -76,47 +48,80 @@ spec:
   #      key: password
   #      name: redis-password-secret
 
-  # Redis exporter container definition (optional)
-  exporter:
-    image: oliver006/redis_exporter:v1.43.1
-    #  To disable THP
-    #  volumes:
-    #    - name: sys
-    #      hostPath:
-    #        path: /sys
-    #  initContainers:
-    #    - name: disable-thp
-    #      image: busybox
-    #      command: ["sh", "-c"]
-    #      args:
-    #        - |-
-    #          set -e
-    #          set -o pipefail
-    #
-    #          echo never > /rootfs/sys/kernel/mm/transparent_hugepage/enabled
-    #
-    #          grep -q -F [never] /sys/kernel/mm/transparent_hugepage/enabled
-    #      volumeMounts:
-    #        - name: sys
-    #          mountPath: /rootfs/sys
-    #          type: Directory
-  initContainers:
-    - args:
-        - |
-          sysctl -w net.core.somaxconn=1024
-          exit 0
-      command:
-        - sh
-        - '-c'
-      image: busybox
-      name: sysctl
-      securityContext:
-        privileged: true
-        runAsUser: 0
+  # affinity, annotations, securityContext, nodeSelector tolerations and priorityClassName (all optional)
+  # are added to the resulting StatefulSet's PodTemplate.
+  # More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#podspec-v1-core
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: example
+                app.kubernetes.io/name: redis
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+
+  annotations:
+    prometheus.io/port: '9121'
+    prometheus.io/scrape: 'true'
+
+  # securityContext:
+  #   runAsUser: 7777777
+  #   runAsGroup: 7777777
+  #   fsGroup: 7777777
+  #   runAsNonRoot: true
+
+  # dataVolumeClaimTemplate allows to define a persistent volume template for Redis. (optional)
+  # If omitted, emptyDir will be used.
+  # More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#persistentvolumeclaim-v1-core
+  #  dataVolumeClaimTemplate:
+  #    metadata:
+  #      name: redis-data
+  #    spec:
+  #      storageClassName: standard
+  #      accessModes:
+  #      - ReadWriteOnce
+  #      resources:
+  #        requests:
+  #          storage: 1Gi
+
+  # Redis container definition (required)
+  # image, resources and securityContext are the same as found in v1.Container.
+  # More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#container-v1-core
   redis:
     image: redis:6-alpine
     initialDelaySeconds: 10
     resources:
       limits:
         memory: 384Mi
-  replicas: 3
+
+  # Redis exporter container definition (optional)
+  exporter:
+    image: oliver006/redis_exporter:v1.43.1
+    resources:
+      limits:
+        cpu: 50m
+        memory: 100Mi
+
+#  To disable THP
+#  volumes:
+#    - name: sys
+#      hostPath:
+#        path: /sys
+#  initContainers:
+#    - name: disable-thp
+#      image: busybox
+#      command: ["sh", "-c"]
+#      args:
+#        - |-
+#          set -e
+#          set -o pipefail
+#
+#          echo never > /rootfs/sys/kernel/mm/transparent_hugepage/enabled
+#
+#          grep -q -F [never] /sys/kernel/mm/transparent_hugepage/enabled
+#      volumeMounts:
+#        - name: sys
+#          mountPath: /rootfs/sys
+#          type: Directory
