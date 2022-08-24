@@ -42,7 +42,6 @@ import (
 )
 
 var (
-	log = logf.Log.WithName("controller_redis")
 	// used to check if the password is a simple alphanumeric string
 	isAlphaNumeric = regexp.MustCompile(`^[[:alnum:]]+$`).MatchString
 )
@@ -59,7 +58,10 @@ type RedisReconciler struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *RedisReconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
-	logger := log.WithValues("Namespace", request.Namespace, "Redis", request.Name)
+	logger := logf.FromContext(ctx).
+		WithName("controller_redis").
+		WithValues("Namespace", request.Namespace, "Redis", request.Name)
+
 	loggerDebug := logger.V(1).Info
 	loggerDebug("Reconciling Redis")
 
