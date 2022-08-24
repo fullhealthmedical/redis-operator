@@ -15,6 +15,7 @@
 package redis
 
 import (
+	"context"
 	"reflect"
 	"sort"
 	"testing"
@@ -397,6 +398,7 @@ func TestRedises_Reconfigure(t *testing.T) {
 					client: redis.NewClient(&redis.Options{
 						Addr: "192.0.2.1:6379",
 					}),
+					ctx: context.TODO(),
 				},
 			},
 			true,
@@ -415,6 +417,7 @@ func TestRedises_Reconfigure(t *testing.T) {
 					client: redis.NewClient(&redis.Options{
 						Addr: "192.0.2.1:6379",
 					}),
+					ctx: context.TODO(),
 				},
 				instance{
 					Address:           Address{"172.18.0.4", "6379"},
@@ -427,6 +430,7 @@ func TestRedises_Reconfigure(t *testing.T) {
 					client: redis.NewClient(&redis.Options{
 						Addr: "192.0.2.1:6379",
 					}),
+					ctx: context.TODO(),
 				},
 			},
 			true,

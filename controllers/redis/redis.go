@@ -164,6 +164,7 @@ type instance struct {
 	masterPort       string
 	masterLinkStatus string
 
+	ctx    context.Context
 	client client
 }
 
@@ -184,10 +185,9 @@ func (i *instance) replicaOf(master Address) (err error) {
 	 *
 	 * Note that we don't check the replies returned by commands, since we
 	 * will observe instead the effects in the next INFO output. */
-	ctx := context.TODO()
-	_, err = i.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-		pipe.SlaveOf(ctx, master.Host, master.Port)
-		pipe.ClientKillByFilter(ctx, "TYPE", "NORMAL")
+	_, err = i.client.TxPipelined(i.ctx, func(pipe redis.Pipeliner) error {
+		pipe.SlaveOf(i.ctx, master.Host, master.Port)
+		pipe.ClientKillByFilter(i.ctx, "TYPE", "NORMAL")
 		return nil
 	})
 
@@ -463,16 +463,17 @@ func (ins instances) reconfigureAsReplicasOf(master Address) error {
 // New creates a new redis replication.
 // Instances are added on the best effort basis. It means that out of N addresses passed
 // if at least 2 instances are healthy the replication will be created. Otherwise New will return an error.
-func New(password string, addresses ...Address) (Replication, error) {
+func New(ctx context.Context, password string, addresses ...Address) (Replication, error) {
 	instances := make(instances, 0, len(addresses))
 	for _, address := range addresses {
 		r := instance{
+			ctx:     ctx,
 			Address: address,
-			client:  redis.NewClient(&redis.Options{Addr: address.String(), Password: password}),
+			client:  redis.NewClient(&redis.Options{Addr: address.String(), Password: password}).WithContext(ctx),
 		}
 
 		// check connection and add the instance if Ping succeeds
-		if err := r.client.Ping(context.TODO()).Err(); err != nil {
+		if err := r.client.Ping(ctx).Err(); err != nil {
 			// TODO: handle -BUSY status
 			_ = r.client.Close()
 			continue

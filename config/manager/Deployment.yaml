@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: redis-operator
-          image: shareed2k/redis-operator:v0.3.0
+          image: bringg/redis-operator:v0.3.0
           args:
             - '--leader-elect'
             - '--zap-time-encoding=iso8601'

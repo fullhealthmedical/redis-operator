@@ -83,7 +83,7 @@ func main() {
 
 	setupLog.Info("Registering Components.")
 
-	if err = (&controllers.RedisReconcile{
+	if err = (&controllers.RedisReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

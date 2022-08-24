@@ -47,8 +47,8 @@ var (
 	isAlphaNumeric = regexp.MustCompile(`^[[:alnum:]]+$`).MatchString
 )
 
-// RedisReconcile reconciles a Redis object
-type RedisReconcile struct {
+// RedisReconciler reconciles a Redis object
+type RedisReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
@@ -58,7 +58,7 @@ type RedisReconcile struct {
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *RedisReconcile) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
+func (r *RedisReconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
 	logger := log.WithValues("Namespace", request.Namespace, "Redis", request.Name)
 	loggerDebug := logger.V(1).Info
 	loggerDebug("Reconciling Redis")
@@ -171,7 +171,7 @@ podIter:
 	}
 
 	// Run Redis Replication Reconfiguration
-	replication, err := redis.New(options.password, addresses...)
+	replication, err := redis.New(ctx, options.password, addresses...)
 	if err != nil {
 		// This is considered part of normal operation - return and requeue
 		logger.Info("Error creating Redis replication, requeue", "error", err)
@@ -283,10 +283,10 @@ podIter:
 }
 
 // createOrUpdate abstracts away keeping in sync the desired and actual state of Kubernetes objects.
-// passing an empty instance implementing runtime.Object will generate the appropriate “expected” object,
+// passing an empty instance implementing runtime.Object will generate the appropriate "expected" object,
 // create an object if it does not exist, compare the existing object with the generated one and update if needed.
 // the Result.Requeue will be true if the object was successfully created or updated or in case there was a conflict updating the object.
-func (r *RedisReconcile) createOrUpdate(
+func (r *RedisReconciler) createOrUpdate(
 	ctx context.Context,
 	object client.Object,
 	redis *k8sv1alpha1.Redis,
@@ -327,7 +327,7 @@ func (r *RedisReconcile) createOrUpdate(
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *RedisReconcile) SetupWithManager(mgr ctrl.Manager) error {
+func (r *RedisReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.Redis{}).
 		Owns(new(corev1.Secret)).
