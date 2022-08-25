@@ -26,7 +26,7 @@ import (
 	"golang.org/x/crypto/argon2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	v1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -124,7 +124,7 @@ func generateObject(r *k8sv1alpha1.Redis, object k8sruntime.Object, options obje
 		return generateConfigMap(r, options.master)
 	case *corev1.Service:
 		return generateService(r, options.serviceType)
-	case *policyv1beta1.PodDisruptionBudget:
+	case *v1.PodDisruptionBudget:
 		return generatePodDisruptionBudget(r)
 	case *appsv1.StatefulSet:
 		return generateStatefulSet(r, options.password)
@@ -142,8 +142,8 @@ func objectUpdateNeeded(got, want k8sruntime.Object) (needed bool) {
 		return configMapUpdateNeeded(got.(*corev1.ConfigMap), want.(*corev1.ConfigMap))
 	case *corev1.Service:
 		return serviceUpdateNeeded(got.(*corev1.Service), want.(*corev1.Service))
-	case *policyv1beta1.PodDisruptionBudget:
-		return podDisruptionBudgetUpdateNeeded(got.(*policyv1beta1.PodDisruptionBudget), want.(*policyv1beta1.PodDisruptionBudget))
+	case *v1.PodDisruptionBudget:
+		return podDisruptionBudgetUpdateNeeded(got.(*v1.PodDisruptionBudget), want.(*v1.PodDisruptionBudget))
 	case *appsv1.StatefulSet:
 		return statefulSetUpdateNeeded(got.(*appsv1.StatefulSet), want.(*appsv1.StatefulSet))
 	}
@@ -237,10 +237,10 @@ func generateService(r *k8sv1alpha1.Redis, serviceType int) *corev1.Service {
 	}
 }
 
-func generatePodDisruptionBudget(r *k8sv1alpha1.Redis) *policyv1beta1.PodDisruptionBudget {
-	return &policyv1beta1.PodDisruptionBudget{
+func generatePodDisruptionBudget(r *k8sv1alpha1.Redis) *v1.PodDisruptionBudget {
+	return &v1.PodDisruptionBudget{
 		ObjectMeta: metav1.ObjectMeta{Name: generateName(r), Namespace: r.GetNamespace(), Labels: r.GetLabels()},
-		Spec: policyv1beta1.PodDisruptionBudgetSpec{
+		Spec: v1.PodDisruptionBudgetSpec{
 			MinAvailable: &[]intstr.IntOrString{intstr.FromInt(redis.MinimumFailoverSize)}[0],
 			Selector:     &metav1.LabelSelector{MatchLabels: r.GetLabels()},
 		},
@@ -460,7 +460,7 @@ func serviceUpdateNeeded(got, want *corev1.Service) (needed bool) {
 	return
 }
 
-func podDisruptionBudgetUpdateNeeded(got, want *policyv1beta1.PodDisruptionBudget) (needed bool) {
+func podDisruptionBudgetUpdateNeeded(got, want *v1.PodDisruptionBudget) (needed bool) {
 	// updating PDB spec is forbidden
 	// TODO: keep an eye on https://github.com/kubernetes/kubernetes/issues/45398
 	// bring back PDB spec comparison once the minimum supported k8s version is 1.15

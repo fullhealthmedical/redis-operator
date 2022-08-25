@@ -40,7 +40,6 @@ type Redis struct {
 // RedisSpec defines the desired state of Redis
 type RedisSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 
 	// Replicas is a number of replicas in a Redis failover cluster
