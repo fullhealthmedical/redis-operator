@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "redis-operator.fullname" . }}
-  namespace: {{ .Values.namespace }}
   labels:
     {{- include "redis-operator.labels" . | nindent 4 }}
 spec:
@@ -30,17 +29,19 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.containerArgs }}
           args:
-            - '--leader-elect'
-            - '--zap-time-encoding=iso8601'
-            - '--zap-encoder=console'
-            - '--zap-log-level=info'
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             - name: WATCH_NAMESPACE
+              {{- with .Values.watchNamespace }}
+              value: {{ . }}
+              {{- end }}
             - name: OPERATOR_NAME
-              value: {{ .Chart.Name }}
+              value: {{ include "redis-operator.fullname" . }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:

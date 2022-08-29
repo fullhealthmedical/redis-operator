@@ -2,15 +2,11 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-namespace: redis-operator
-createNamespace: true
-
 replicaCount: 1
 
 image:
   repository: bringg/redis-operator
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
   tag: "v0.3.0"
 
 imagePullSecrets: []
@@ -32,10 +28,10 @@ podSecurityContext:
 securityContext:
   runAsUser: 1001
 
-resources:
-  limits:
-    cpu: 100m
-    memory: 192Mi
-  requests:
-    cpu: 50m
-    memory: 128Mi
+resources: {}
+
+containerArgs:
+- --leader-elect
+- --zap-time-encoding=iso8601
+- --zap-encoder=console
+- --zap-log-level=info

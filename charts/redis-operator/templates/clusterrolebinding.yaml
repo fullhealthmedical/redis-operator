@@ -3,11 +3,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: {{ include "redis-operator.fullname" . }}
-  namespace: {{ .Values.namespace }}
 subjects:
 - kind: ServiceAccount
   name: {{ include "redis-operator.serviceAccountName" . }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
   name: {{ include "redis-operator.fullname" . }}
