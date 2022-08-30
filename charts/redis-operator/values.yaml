@@ -31,4 +31,4 @@ resources: {}
 
 logLevel: info
 
-extraOperatorArgs: {}
+extraOperatorArgs: []
