@@ -3,6 +3,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ include "redis-operator.fullname" . }}
+  labels:
+    {{- include "redis-operator.labels" . | nindent 4 }}
 rules:
 - apiGroups:
   - k8s.amaiz.com

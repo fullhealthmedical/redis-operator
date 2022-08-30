@@ -31,8 +31,12 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- with .Values.containerArgs }}
           args:
+            - --leader-elect
+            - --zap-time-encoding=iso8601
+            - --zap-encoder=console
+            - --zap-log-level={{ .Values.logLevel }}
+          {{- with .Values.extraOperatorArgs }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:

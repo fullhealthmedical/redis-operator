@@ -29,8 +29,6 @@ securityContext:
 
 resources: {}
 
-containerArgs:
-- --leader-elect
-- --zap-time-encoding=iso8601
-- --zap-encoder=console
-- --zap-log-level=info
+logLevel: info
+
+extraOperatorArgs: {}
