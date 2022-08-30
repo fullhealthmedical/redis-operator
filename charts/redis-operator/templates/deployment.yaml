@@ -36,8 +36,8 @@ spec:
             - --zap-time-encoding=iso8601
             - --zap-encoder=console
             - --zap-log-level={{ .Values.logLevel }}
-          {{- with .Values.extraOperatorArgs }}
-            {{- toYaml . | nindent 12 }}
+          {{- range $value := .Values.extraOperatorArgs }}
+            - {{ $value }}
           {{- end }}
           env:
             - name: WATCH_NAMESPACE
