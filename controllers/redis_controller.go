@@ -25,7 +25,7 @@ import (
 	"github.com/cenkalti/backoff/v3"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/policy/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -115,11 +115,11 @@ func (r *RedisReconciler) Reconcile(ctx context.Context, request ctrl.Request) (
 		new(corev1.Service), new(corev1.Service), new(corev1.Service), // 3 distinct services ;)
 		new(corev1.Secret),
 		new(corev1.ConfigMap),
-		new(v1.PodDisruptionBudget),
+		new(policyv1.PodDisruptionBudget),
 		new(appsv1.StatefulSet),
 	} {
 		switch object.(type) {
-		case *corev1.ConfigMap, *v1.PodDisruptionBudget, *appsv1.StatefulSet:
+		case *corev1.ConfigMap, *policyv1.PodDisruptionBudget, *appsv1.StatefulSet:
 		// nothing special to do here
 		case *corev1.Secret:
 			if len(options.password) == 0 {
@@ -334,7 +334,7 @@ func (r *RedisReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(new(corev1.Secret)).
 		Owns(new(corev1.Service)).
 		Owns(new(corev1.ConfigMap)).
-		Owns(new(v1.PodDisruptionBudget)).
+		Owns(new(policyv1.PodDisruptionBudget)).
 		Owns(new(appsv1.StatefulSet)).
 		Complete(r)
 }
