@@ -16,13 +16,13 @@ Redis Operator can be considered a Kubernetes-native replacement for [Redis Sent
 
 Fundamental things to know about Redis Operator:
 
-* `3` is a minimum number of Redis instances. Having `3` instances allows to always maintain a simple master-replica pair thus making it possible to replicate data even with Redis persistence turned off.
-* Redis Operator is stateless. It means that it does not store any information about Redis instances internally. If an instance of the operator terminates in the middle of the failover process it will reconnect to Redis instances and reconfigure them if it is still required.
-* Redis Operator is not a distributed system. It leverages a simple leader election protocol. You can run multiple instances of Redis Operator. Detailed description of leader election can be found [here][leader-election].
-* One Redis Operator deployment is designed to rule multiple Redis replication setups. However you should bear in mind that current implementation is limited to reconfiguring one Redis replication at a time.
-* Redis Operator does not provide continuous monitoring, notification and service discovery. Those are provided by Kubernetes itself.
-* Redis clients don't need Sentinel support. Appropriate `role` labels are added to each pod and end users are encouraged to use services to connect to master or replica nodes.
-* Redis 5.0 is the minimum supported version.
+- `3` is a minimum number of Redis instances. Having `3` instances allows to always maintain a simple master-replica pair thus making it possible to replicate data even with Redis persistence turned off.
+- Redis Operator is stateless. It means that it does not store any information about Redis instances internally. If an instance of the operator terminates in the middle of the failover process it will reconnect to Redis instances and reconfigure them if it is still required.
+- Redis Operator is not a distributed system. It leverages a simple leader election protocol. You can run multiple instances of Redis Operator. Detailed description of leader election can be found [here][leader-election].
+- One Redis Operator deployment is designed to rule multiple Redis replication setups. However you should bear in mind that current implementation is limited to reconfiguring one Redis replication at a time.
+- Redis Operator does not provide continuous monitoring, notification and service discovery. Those are provided by Kubernetes itself.
+- Redis clients don't need Sentinel support. Appropriate `role` labels are added to each pod and end users are encouraged to use services to connect to master or replica nodes.
+- Redis 5.0 is the minimum supported version.
 
 ## Getting Started
 
@@ -31,7 +31,7 @@ Fundamental things to know about Redis Operator:
 1. Create all the necessary resources and deploy the operator:
 
     ```bash
-    kubectl apply -k deploy
+    kubectl apply -k config/manager
     ```
 
 2. Verify that the operator is running:
@@ -49,7 +49,7 @@ Redis can be deployed by creating a `Redis` Custom Resource(CR).
 1. Create a Redis CR that deploys a 3 node Redis replication in high availablilty mode:
 
     ```bash
-    kubectl apply -f example/k8s_v1alpha1_redis_cr.yaml
+    kubectl apply -f config/samples/k8s.amaiz.com_v1alpha1_redis.yaml
     ```
 
 2. Wait until the `redis-example-...` pods for the Redis replication are up and check the status of 'redis'. It will show the name for the Pod of the current master instance and the total number of replicas in the setup:
@@ -63,11 +63,11 @@ Redis can be deployed by creating a `Redis` Custom Resource(CR).
 3. Verify that Redis is working as expected:
 
     ```bash
-    $ kubectl exec $(k get redis example -o jsonpath={.status.master}) -c redis redis-cli set lol woot
+    $ kubectl exec $(kubectl get redis example -o jsonpath={.status.master}) -c redis redis-cli set lol woot
     OK
     $ kubectl delete pod -l redis=example,role=master
     pod "redis-example-0" deleted
-    $ kubectl exec $(k get redis example -o jsonpath={.status.master}) -c redis redis-cli get lol
+    $ kubectl exec $(kubectl get redis example -o jsonpath={.status.master}) -c redis redis-cli get lol
     woot
     ```
 
@@ -76,6 +76,7 @@ Redis can be deployed by creating a `Redis` Custom Resource(CR).
     ```bash
     $ kubectl scale redis example --replicas 4
     redis.k8s.amaiz.com/example scaled
+
     $ kubectl get redis
     NAME      MASTER            REPLICAS   DESIRED   AGE
     example   redis-example-1   4          4         10m
@@ -83,14 +84,14 @@ Redis can be deployed by creating a `Redis` Custom Resource(CR).
 
 5. Redis Operator creates the following resources owned by the corresponding `Redis` CR. Please note that the name of `Redis` (`example` in this case) is used as an infix or suffix for the names of the generated resources:
 
-    * Secret `redis-example` (in case the password is set up)
-    * ConfigMap `redis-example`
-    * PodDisruptionBudget `redis-example`
-    * StatefulSet `redis-example`
-    * Services:
-        * `redis-example` - covers all instances
-        * `redis-example-headless` - covers all instances, headless
-        * `redis-example-master` - service for access to the master instance
+    - Secret `redis-example` (in case the password is set up)
+    - ConfigMap `redis-example`
+    - PodDisruptionBudget `redis-example`
+    - StatefulSet `redis-example`
+    - Services:
+        - `redis-example` - covers all instances
+        - `redis-example-headless` - covers all instances, headless
+        - `redis-example-master` - service for access to the master instance
 
 6. Finally, to remove this particular example instance of the `Redis` CR, you can simply delete it, and Redis Operator will take care of cleanup for you.
 
@@ -98,6 +99,7 @@ Redis can be deployed by creating a `Redis` Custom Resource(CR).
     $ kubectl get redis
     NAME      MASTER            REPLICAS   DESIRED   AGE
     example   redis-example-1   4          4         10m
+
     $ kubectl delete redis example
     redis.k8s.amaiz.com "example" deleted
     ```
@@ -119,9 +121,9 @@ kubectl delete crd redis.k8s.amaiz.com
 
 The main goal of the project is to create a Kubernetes native service for managing highly available Redis deployments. Sentinel is great for simple Redis replication but it does not fit into Kubernetes model for a number of reasons:
 
-* yet another distributed system to maintain. In order to support automatic failover and high availability of Redis one should figure out some way to support automatic failover and high availability of Sentinel.
-* feature overlap. Monitoring(periodic instance health check), notifications(events) and service discovery are something Kubernetes already provides out of the box and can be leveraged by implementing your own controller and Custom Resources.
-* Sentinel allows to resist without human intervention _to certain kind of failures_. The goal of the operator is to create a Redis deployment that would resist without human intervention _to most kind of failures_.
+- yet another distributed system to maintain. In order to support automatic failover and high availability of Redis one should figure out some way to support automatic failover and high availability of Sentinel.
+- feature overlap. Monitoring(periodic instance health check), notifications(events) and service discovery are something Kubernetes already provides out of the box and can be leveraged by implementing your own controller and Custom Resources.
+- Sentinel allows to resist without human intervention _to certain kind of failures_. The goal of the operator is to create a Redis deployment that would resist without human intervention _to most kind of failures_.
 
 Another imporatant goal of this project is to resist failures even with persistence turned off. In some scenarios persisting data on disk is not permitted and all the data should reside only in-memory no matter what. And at the same time losing this data is undesirable.
 
@@ -145,8 +147,8 @@ A healthy replication is the state when there is a single master and all other i
 
 Master is an instance with at least one connected replica. If there is no masters found then there is one of two cases met:
 
-* the master is lost. Then there's at least one replica and one of the replicas should be promoted to master
-* all instances are masters. This is considered to be the initial state thus any instance can be chosen as a master
+- the master is lost. Then there's at least one replica and one of the replicas should be promoted to master
+- all instances are masters. This is considered to be the initial state thus any instance can be chosen as a master
 
 In case the master has been lost the list of candidate instances are sorted according to their replica priority and replication offset. Instances with replica priority equal to `0` are filtered out prior to sorting.
 
