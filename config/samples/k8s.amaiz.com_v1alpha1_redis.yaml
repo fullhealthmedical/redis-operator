@@ -63,8 +63,8 @@ spec:
           weight: 100
 
   annotations:
-    prometheus.io/port: '9121'
-    prometheus.io/scrape: 'true'
+    prometheus.io/port: "9121"
+    prometheus.io/scrape: "true"
 
   # securityContext:
   #   runAsUser: 7777777
@@ -90,20 +90,19 @@ spec:
   # image, resources and securityContext are the same as found in v1.Container.
   # More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#container-v1-core
   redis:
-    image: redis:6-alpine
+    image: redis:7-alpine
     initialDelaySeconds: 10
     resources:
       limits:
         memory: 384Mi
 
   # Redis exporter container definition (optional)
-  exporter:
-    image: oliver006/redis_exporter:v1.43.1
-    resources:
-      limits:
-        cpu: 50m
-        memory: 100Mi
-
+  # exporter:
+  #   image: oliver006/redis_exporter:v1.43.1
+  #   resources:
+  #     limits:
+  #       cpu: 50m
+  #       memory: 100Mi
 #  To disable THP
 #  volumes:
 #    - name: sys
